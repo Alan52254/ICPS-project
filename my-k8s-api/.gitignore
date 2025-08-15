@@ -33,3 +33,5 @@ tmp/
 # Docker（如使用）
 *.tar
 *.bak
+
+CLAUDE.md
