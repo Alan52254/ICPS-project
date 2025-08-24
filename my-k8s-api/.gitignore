@@ -35,3 +35,5 @@ tmp/
 *.bak
 
 CLAUDE.md
+.CLAUDE
+.claude
