@@ -1,7 +1,7 @@
 # my-k8s-api/routers/grafana.py
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from ..services.grafana_service import generate_k8s_dashboard_json
+from services.grafana_service import generate_k8s_dashboard_json
 
 router = APIRouter(
     prefix="/api/grafana",

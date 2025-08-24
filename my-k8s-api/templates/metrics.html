@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Monitoring Dashboard - K8s Monitor{% endblock %}
+
+{% block content %}
+    <!-- Page Header -->
+    <section class="py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="text-center mb-4">
+                        <h1 class="display-5 fw-bold">
+                            <i class="fas fa-chart-line text-primary me-3"></i>
+                            <span data-lang="metrics-page-title">Monitoring Dashboard</span>
+                        </h1>
+                        <p class="lead text-muted" data-lang="metrics-page-subtitle">
+                            Real-time monitoring of your Kubernetes cluster resources and performance metrics
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Stats Overview -->
+    <section class="py-4">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="section-card p-4 text-center">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-cube text-primary fa-lg"></i>
+                            </div>
+                        </div>
+                        <h3 class="fw-bold mb-1" id="totalPods">-</h3>
+                        <p class="text-muted mb-0" data-lang="stats-total-pods">Total Pods</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="section-card p-4 text-center">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-check-circle text-success fa-lg"></i>
+                            </div>
+                        </div>
+                        <h3 class="fw-bold mb-1" id="runningPods">-</h3>
+                        <p class="text-muted mb-0" data-lang="stats-running-pods">Running Pods</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="section-card p-4 text-center">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-layer-group text-warning fa-lg"></i>
+                            </div>
+                        </div>
+                        <h3 class="fw-bold mb-1" id="totalNamespaces">-</h3>
+                        <p class="text-muted mb-0" data-lang="stats-namespaces">Namespaces</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6">
+                    <div class="section-card p-4 text-center">
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-microchip text-info fa-lg"></i>
+                            </div>
+                        </div>
+                        <h3 class="fw-bold mb-1" id="avgCpuUsage">-</h3>
+                        <p class="text-muted mb-0" data-lang="stats-avg-cpu">Avg CPU Usage</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Monitoring Data Section -->
+    <section class="py-4">
+        <div class="container">
+            <div class="section-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="mb-0" data-lang="metrics-table-title">Pod Monitoring Data</h3>
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Auto-refresh toggle -->
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                            <label class="form-check-label" for="autoRefresh" data-lang="metrics-auto-refresh">
+                                Auto Refresh (30s)
+                            </label>
+                        </div>
+                        <div class="text-muted small">
+                            <span data-lang="metrics-last-update">Last updated:</span>
+                            <span id="lastUpdateTime">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-lg-4 col-md-6 mb-3 mb-md-0">
+                        <label for="namespaceSelect" class="form-label fw-semibold" data-lang="metrics-namespace-label">Select Namespace</label>
+                        <select id="namespaceSelect" class="form-select">
+                            <option value="" data-lang="metrics-loading">Loading namespaces...</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
+                        <label for="sortBy" class="form-label fw-semibold" data-lang="metrics-sort-label">Sort By</label>
+                        <select id="sortBy" class="form-select">
+                            <option value="name" data-lang="metrics-sort-name">Pod Name</option>
+                            <option value="cpu" data-lang="metrics-sort-cpu">CPU Usage</option>
+                            <option value="memory" data-lang="metrics-sort-memory">Memory Usage</option>
+                            <option value="status" data-lang="metrics-sort-status">Status</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-4 d-flex align-items-end gap-2">
+                        <button id="refreshBtn" class="btn btn-primary flex-grow-1">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            <span data-lang="metrics-refresh-btn">Refresh Now</span>
+                        </button>
+                        <button id="exportBtn" class="btn btn-outline-secondary">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Metrics Table -->
+                <div class="table-responsive">
+                    <div class="metrics-table">
+                        <div style="max-height: 600px; overflow-y: auto;">
+                            <table class="table table-hover mb-0">
+                                <thead class="sticky-top">
+                                    <tr>
+                                        <th data-lang="metrics-col-pod">
+                                            <i class="fas fa-cube me-2"></i>Pod Name
+                                        </th>
+                                        <th data-lang="metrics-col-cpu">
+                                            <i class="fas fa-microchip me-2"></i>CPU (cores)
+                                        </th>
+                                        <th data-lang="metrics-col-memory">
+                                            <i class="fas fa-memory me-2"></i>Memory (MiB)
+                                        </th>
+                                        <th data-lang="metrics-col-net-rx">
+                                            <i class="fas fa-download me-2"></i>Net Rx (KB/s)
+                                        </th>
+                                        <th data-lang="metrics-col-net-tx">
+                                            <i class="fas fa-upload me-2"></i>Net Tx (KB/s)
+                                        </th>
+                                        <th data-lang="metrics-col-status">
+                                            <i class="fas fa-info-circle me-2"></i>Status
+                                        </th>
+                                        <th data-lang="metrics-col-actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="metricsBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="d-flex justify-content-center align-items-center">
+                                                <div class="spinner-border text-primary me-3" role="status">
+                                                    <span class="visually-hidden">Loading...</span>
+                                                </div>
+                                                <span data-lang="metrics-loading-data">Loading monitoring data...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Metrics pagination" class="mt-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            <span data-lang="metrics-showing">Showing</span>
+                            <span id="showingRange">-</span>
+                            <span data-lang="metrics-of">of</span>
+                            <span id="totalItems">-</span>
+                            <span data-lang="metrics-items">items</span>
+                        </div>
+                        <ul class="pagination pagination-sm mb-0" id="pagination">
+                            <!-- Pagination items will be generated by JavaScript -->
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="py-4">
+        <div class="container">
+            <h3 class="mb-4" data-lang="metrics-charts-title">Resource Usage Trends</h3>
+            <div class="row g-4">
+                <div class="col-xl-6">
+                    <div class="section-card p-4">
+                        <h6 class="fw-semibold mb-3" data-lang="metrics-cpu-chart">CPU Usage Over Time</h6>
+                        <div id="cpuChart" style="height: 300px;">
+                            <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                                <div>
+                                    <i class="fas fa-chart-area fa-2x mb-2"></i>
+                                    <p data-lang="metrics-chart-placeholder">Chart will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-6">
+                    <div class="section-card p-4">
+                        <h6 class="fw-semibold mb-3" data-lang="metrics-memory-chart">Memory Usage Over Time</h6>
+                        <div id="memoryChart" style="height: 300px;">
+                            <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                                <div>
+                                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                    <p data-lang="metrics-chart-placeholder">Chart will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/static/js/metrics.js"></script>
+{% endblock %}

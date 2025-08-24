@@ -3,7 +3,7 @@ from config import IN_CLUSTER
 
 router = APIRouter()
 
-@router.get("/health")
+@router.get("/api/health")
 def health_check():
     """
     健康檢查

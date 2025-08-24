@@ -21,3 +21,19 @@ def index_page(request: Request):
     GET / -> 回傳主頁 HTML
     """
     return generate_index_html(request)
+
+
+@router.get("/chat", response_class=HTMLResponse)
+def chat_page(request: Request):
+    """
+    GET /chat -> 回傳 AI Assistant 頁面
+    """
+    return templates.TemplateResponse("chat.html", {"request": request})
+
+
+@router.get("/metrics", response_class=HTMLResponse)
+def metrics_page(request: Request):
+    """
+    GET /metrics -> 回傳 Monitoring 頁面
+    """
+    return templates.TemplateResponse("metrics.html", {"request": request})
